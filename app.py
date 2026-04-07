@@ -1,0 +1,59 @@
+import os
+import json
+import uuid
+import asyncio
+import subprocess
+from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+
+app = FastAPI(title="WebProbe API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    return {"status": "WebProbe API is online", "stream_endpoint": "/api/scan/stream"}
+
+@app.get("/api/scan/stream")
+async def stream_scan(url: str, depth: int = 1, threads: int = 10, skip_dirs: bool = True):
+    if not (url.startswith("http://") or url.startswith("https://")):
+        async def err(): yield f"data: [ERROR] Invalid URL\n\n"
+        return StreamingResponse(err(), media_type="text/event-stream")
+
+    async def event_generator():
+        # Using -u to disable python stdout buffering
+        cmd = ["python3", "-u", "webprobe.py", url, "--depth", str(depth), "--threads", str(threads)]
+        if skip_dirs:
+            cmd.append("--skip-dirs")
+            
+        process = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.STDOUT
+        )
+        
+        while True:
+            line = await process.stdout.readline()
+            if not line:
+                break
+            
+            line_str = line.decode('utf-8').rstrip()
+            if line_str:
+                yield f"data: {line_str}\n\n"
+        
+        await process.wait()
+        yield "data: [WEBPROBE_DONE]\n\n"
+        
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=8005, reload=True)

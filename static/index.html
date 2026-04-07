@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebProbe - Advanced Recon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-effects">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="grid-overlay"></div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <h1 class="glitch" data-text="WEBPROBE">WEBPROBE</h1>
+            <p>Automated Vulnerability Scanner</p>
+        </header>
+
+        <main id="dashboard">
+            <div class="glass-panel" id="input-panel">
+                <h2>Initialize Target Scan</h2>
+                <form id="scan-form">
+                    <div class="input-group">
+                        <input type="url" id="target-url" placeholder="http://demo.testfire.net" required autocomplete="off">
+                        <button type="submit" id="scan-btn">
+                            <span>LAUNCH</span>
+                        </button>
+                    </div>
+                    <div class="options-group">
+                        <label><input type="checkbox" id="skip-dirs" checked> Quick Scan (Skip slow directory enumeration)</label>
+                        <select id="depth">
+                            <option value="1">Depth: 1</option>
+                            <option value="2">Depth: 2</option>
+                            <option value="3">Depth: 3</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+
+            <div class="glass-panel" id="scanning-panel" style="display: none;">
+                <div class="radar-container">
+                    <div class="radar"></div>
+                    <div class="radar-sweep"></div>
+                </div>
+                <h3 class="pulsate">Target Acquired — Analyzing Data...</h3>
+                <p id="status-text">Injecting test vectors and fuzzing endpoints...</p>
+            </div>
+
+            <div class="glass-panel" id="results-panel" style="display: none;">
+                <h2>Tactical Report</h2>
+                <div class="stats-grid">
+                    <div class="stat-card" style="--accent: #ff0055;">
+                        <h4>SQL Injection</h4>
+                        <span id="sqli-count">0</span>
+                    </div>
+                    <div class="stat-card" style="--accent: #00f0ff;">
+                        <h4>Cross-Site Scripting</h4>
+                        <span id="xss-count">0</span>
+                    </div>
+                    <div class="stat-card" style="--accent: #ffaa00;">
+                        <h4>Security Headers</h4>
+                        <span id="header-count">0</span>
+                    </div>
+                    <div class="stat-card" style="--accent: #aa00ff;">
+                        <h4>Open Directories</h4>
+                        <span id="dir-count">0</span>
+                    </div>
+                </div>
+                
+                <div class="detailed-results">
+                    <h3>Vulnerability Log</h3>
+                    <div id="log-container"></div>
+                </div>
+                
+                <button id="reset-btn" class="secondary-btn">New Scan</button>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
