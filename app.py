@@ -11,21 +11,9 @@ from pydantic import BaseModel
 
 app = FastAPI(title="WebProbe API")
 
-# Production: Serve React Frontend
-if os.path.exists("./frontend/dist"):
-    app.mount("/assets", StaticFiles(directory="./frontend/dist/assets"), name="assets")
-    
-    @app.get("/", include_in_schema=False)
-    @app.get("/{full_path:path}", include_in_schema=False)
-    async def serve_react(full_path: str = ""):
-        # If the path looks like an API call, let it through
-        if full_path.startswith("api/"):
-            raise HTTPException(status_code=404)
-        return FileResponse("./frontend/dist/index.html")
-else:
-    @app.get("/")
-    async def root():
-        return {"status": "WebProbe API is online (Manual UI build required)", "stream_endpoint": "/api/scan/stream"}
+# ---------------------------------------------------------
+# API Routes
+# ---------------------------------------------------------
 
 app.add_middleware(
     CORSMiddleware,
@@ -68,6 +56,24 @@ async def stream_scan(url: str, depth: int = 1, threads: int = 10, skip_dirs: bo
         yield "data: [WEBPROBE_DONE]\n\n"
         
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+# ---------------------------------------------------------
+# Production: Serve React Frontend (Catch-all)
+# ---------------------------------------------------------
+if os.path.exists("./frontend/dist"):
+    app.mount("/assets", StaticFiles(directory="./frontend/dist/assets"), name="assets")
+    
+    @app.get("/", include_in_schema=False)
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_react(full_path: str = ""):
+        # If the path starts with api/, it means no API route matched
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
+        return FileResponse("./frontend/dist/index.html")
+else:
+    @app.get("/")
+    async def root():
+        return {"status": "WebProbe API is online (Manual UI build required)", "stream_endpoint": "/api/scan/stream"}
 
 if __name__ == "__main__":
     import uvicorn
