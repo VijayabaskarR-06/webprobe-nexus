@@ -4,11 +4,19 @@ import uuid
 import asyncio
 import subprocess
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 app = FastAPI(title="WebProbe API")
+
+# Mount frontend dist if it exists
+if os.path.exists("./frontend/dist"):
+    app.mount("/assets", StaticFiles(directory="./frontend/dist/assets"), name="assets")
+    @app.get("/", include_in_schema=False)
+    async def serve_index():
+        return FileResponse("./frontend/dist/index.html")
 
 app.add_middleware(
     CORSMiddleware,
